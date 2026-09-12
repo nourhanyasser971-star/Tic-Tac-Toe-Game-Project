@@ -49,6 +49,45 @@ public:
          grid[i].resize(Size, ' ');
     }
 
+
+
+
+
+
+    bool checkWin(char symbol) const {
+        for (int i = 0; i < Size; i++) {
+            if (grid[i][0] == symbol && grid[i][1] == symbol && grid[i][2] == symbol) { // rows
+                return true;
+            }
+            if (grid[0][i] == symbol && grid[1][i] == symbol && grid[2][i] == symbol) { // columns
+                return true;
+            }
+        }
+
+        
+        if (grid[0][0] == symbol && grid[1][1] == symbol && grid[2][2] == symbol) { // diagonal 1
+            return true;
+        }
+        if (grid[0][2] == symbol && grid[1][1] == symbol && grid[2][0] == symbol) { // diagonal 2
+            return true;
+        }
+
+        return false;
+    }
+
+
+
+    bool isFull() const {
+        for (int i = 0; i < Size; i++) {
+            for (int j = 0; j < Size; j++) {
+                if (grid[i][j] == ' ') {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     int getSize() const {
         return Size;
     }
