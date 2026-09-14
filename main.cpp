@@ -25,7 +25,7 @@ public:
 
 
     bool checkWin(char symbol) const {
-        for (int i = 0; i < size; i++) {
+        for (int i = 0; i < Size; i++) {
             if (grid[i][0] == symbol && grid[i][1] == symbol && grid[i][2] == symbol) { //rows
                 return true;
             }
@@ -46,8 +46,8 @@ public:
 
 
     bool isFull() const {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
+        for (int i = 0; i < Size; i++) {
+            for (int j = 0; j < Size; j++) {
                 if (grid[i][j] == ' ') {
                     return false;
                 }
@@ -78,6 +78,56 @@ public:
         }
     }
 
+    bool makeMove(int row, int col, char symbol)
+    {
+        if (!isValidMove(row, col))
+        {
+            return false;
+        }
+        else
+        {
+            grid[row][col] = symbol;
+            return true;
+        }
+    }
+    bool isValidMove(int row, int col) const
+    {
+        if (row >= Size || row < 0 || col >= Size || col < 0)
+        {
+            return false;
+        }
+     
+        if (grid[row][col] != ' ')
+        {
+            return false;
+        }
+         
+        return true;
+    }
+    void display()
+    {
+        for (int i = 1; i <= Size; i++)
+        {
+            if (i == 1)
+            {
+                cout << "    " << i;
+            }
+            else
+            {
+                cout << "   " << i;
+            }
+        }
+        cout << endl;
+        for (int i = 0; i < Size; i++)
+        {
+            cout << i+1 <<" | ";
+            for (int j = 0; j < Size; j++)
+            {
+                cout << grid[i][j] << " | ";
+            }
+            cout << endl;
+        }
+    }
 
 };
 
