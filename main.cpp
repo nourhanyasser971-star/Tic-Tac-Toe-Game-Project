@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <algorithm>
 
 
 using namespace std;
@@ -90,6 +91,16 @@ public:
             return true;
         }
     }
+
+    // Needed by minimax to backtrack a hypothetical move.
+    void undoMove(int row, int col)
+    {
+        if (row >= 0 && row < Size && col >= 0 && col < Size)
+        {
+            grid[row][col] = ' ';
+        }
+    }
+
     bool isValidMove(int row, int col) const
     {
         if (row >= Size || row < 0 || col >= Size || col < 0)
@@ -170,14 +181,71 @@ class AIPlayer:public Player{
   private:
 
    Difficulty difficulty;
+   Board* board; // pointer to the board this AI is currently playing on
+
+   char getOpponentSymbol() const {
+     return (symbol == 'X') ? 'O' : 'X';
+   }
+
+   // Recursive minimax scorer.
+   // isMaximizing = true  -> it's the AI's turn to move in this hypothetical
+   // isMaximizing = false -> it's the human's turn to move in this hypothetical
+   int minimax(Board& b, bool isMaximizing) const {
+     if (b.checkWin(symbol)) {
+       return 10;
+     }
+     if (b.checkWin(getOpponentSymbol())) {
+       return -10;
+     }
+     if (b.isFull()) {
+       return 0;
+     }
+
+     int size = b.getSize();
+
+     if (isMaximizing) {
+       int bestScore = -1000;
+       for (int i = 0; i < size; i++) {
+         for (int j = 0; j < size; j++) {
+           if (b.isValidMove(i, j)) {
+             b.makeMove(i, j, symbol);
+             int score = minimax(b, false);
+             b.undoMove(i, j);
+             bestScore = max(bestScore, score);
+           }
+         }
+       }
+       return bestScore;
+     } else {
+       int bestScore = 1000;
+       for (int i = 0; i < size; i++) {
+         for (int j = 0; j < size; j++) {
+           if (b.isValidMove(i, j)) {
+             b.makeMove(i, j, getOpponentSymbol());
+             int score = minimax(b, true);
+             b.undoMove(i, j);
+             bestScore = min(bestScore, score);
+           }
+         }
+       }
+       return bestScore;
+     }
+   }
 
   public:
-   AIPlayer(const string& n, char s, Difficulty d):Player(n,s),difficulty(d){}
+   AIPlayer(const string& n, char s, Difficulty d):Player(n,s),difficulty(d),board(nullptr){}
 
    void setDifficulty(Difficulty newDifficulty){
      difficulty=newDifficulty;
 
    }
+
+   // Lets the game loop tell the AI which board it's playing on,
+   // since the inherited getMove(row, col) signature has no board parameter.
+   void setBoard(Board& b) {
+     board = &b;
+   }
+
    void getRandomMove(const Board& board, int& row, int& col)const {
      vector<pair<int,int>> valid;
      int size=board.getSize();
@@ -201,6 +269,53 @@ class AIPlayer:public Player{
 
    }
 
+   // +10 if the AI has won this hypothetical board, -10 if the human has, else 0.
+   int evaluateBoard(const Board& board) const {
+     if (board.checkWin(symbol)) {
+       return 10;
+     }
+     if (board.checkWin(getOpponentSymbol())) {
+       return -10;
+     }
+     return 0;
+   }
+
+   void getBestMove(Board& board, int& row, int& col) const {
+     int bestScore = -1000;
+     row = -1;
+     col = -1;
+     int size = board.getSize();
+
+     for (int i = 0; i < size; i++) {
+       for (int j = 0; j < size; j++) {
+         if (board.isValidMove(i, j)) {
+           board.makeMove(i, j, symbol);
+           int score = minimax(board, false);
+           board.undoMove(i, j);
+
+           if (score > bestScore) {
+             bestScore = score;
+             row = i;
+             col = j;
+           }
+         }
+       }
+     }
+   }
+
+   void getMove(int& row, int& col) override {
+     if (board == nullptr) {
+       row = -1;
+       col = -1;
+       return;
+     }
+
+     if (difficulty == EASY) {
+       getRandomMove(*board, row, col);
+     } else {
+       getBestMove(*board, row, col);
+     }
+   }
 
 };
 
